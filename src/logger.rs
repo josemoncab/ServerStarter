@@ -1,7 +1,3 @@
-pub fn debug(msg: &str) {
-    println!("[\x1b[37mDEBUG\x1b[0m] {msg}");
-}
-
 pub fn user(msg: &str) {
     println!("[\x1b[95mUSER\x1b[0m] {msg}")
 }

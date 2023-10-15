@@ -76,7 +76,7 @@ impl Settings<'_> {
 }
 
 #[derive(Debug)]
-struct Software<'a>(&'a str);
+pub struct Software<'a>(&'a str);
 
 impl<'a> Software<'a> {
     pub const PAPER: Software<'a> = Software("paper");

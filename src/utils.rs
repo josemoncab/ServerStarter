@@ -7,29 +7,39 @@ pub fn check_jar() -> String {
     let mut jar_name = String::new();
 
     if Path::new("./jars").exists() {
-        for file in fs::read_dir("./jars").unwrap()  {
-            let file = file.unwrap();
-            if file.path().extension().unwrap() == "jar" {
-                jar_name = file.file_name().into_string().unwrap();
-                break;
-            }
-        }
+        jar_name = search_jar("./jars")
     } else {
-        for file in fs::read_dir("./").unwrap()  {
-            let file = file.unwrap();
-            if file.path().extension().is_none() { continue }
-            if file.path().extension().unwrap() == "jar" {
-                jar_name = file.file_name().into_string().unwrap();
-                break;
-            }
-        }
+        jar_name = search_jar("./")
     }
     jar_name
 }
 
-/// Return the string given by the user. Automatically append the options at the end of the message
-pub fn user_input(msg: &str, options: Vec<&str>) -> String {
-    logger::user(format!("{msg} ({}):", options.join(", ")).as_str());
+fn search_jar(path: &str) -> String {
+    let mut jar_name = String::new();
+    for file in fs::read_dir(path).unwrap()  {
+        let file = file.unwrap();
+        match file.path().extension() {
+            None => continue,
+            file_extension => {
+                if file_extension.unwrap() == "jar" {
+                    jar_name = file.file_name().into_string().unwrap();
+                    break;
+                }
+            }
+        }
+
+    }
+    jar_name
+}
+
+/// Return the string given by the user. Automatically append the options at the end of the
+/// message and check if the user input a valid option
+pub fn user_ask(msg: &str, options: Vec<&str>) -> String {
+    if !options.is_empty() {
+        logger::user(format!("{msg} ({}):", options.join(", ")).as_str());
+    } else {
+        logger::user(format!("{msg}:").as_str());
+    }
 
     let mut user_in= String::new();
     std::io::stdin().read_line(&mut user_in).unwrap();
@@ -44,4 +54,9 @@ pub fn user_input(msg: &str, options: Vec<&str>) -> String {
     }
 
     user_in.trim().to_string()
+}
+
+/// Return the string given by the user
+pub fn user_input(msg: &str) -> String {
+    user_ask(msg, vec![])
 }
