@@ -3,6 +3,7 @@ use std::path::Path;
 mod logger;
 mod http;
 mod utils;
+mod config;
 
 #[tokio::main]
 async fn main() {
