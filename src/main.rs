@@ -32,7 +32,7 @@ async fn main() {
         logger::success("Jar encontrado!")
     }
 
-    let settings = config::Settings::load();
+    let settings = Settings::load();
 
     check_updates(settings).await;
 }
@@ -98,11 +98,20 @@ async fn create_server() {
 -XX:+UnlockExperimentalVMOptions -XX:+DisableExplicitGC -XX:+AlwaysPreTouch -XX:G1NewSizePercent=30 -XX:G1MaxNewSizePercent=40 -XX:G1HeapRegionSize=8M -XX:G1ReservePercent=20 -XX:G1HeapWastePercent=5 -XX:G1MixedGCCountTarget=4 -XX:InitiatingHeapOccupancyPercent=15 -XX:G1MixedGCLiveThresholdPercent=90 -XX:G1RSetUpdatingPauseTimePercent=5 -XX:SurvivorRatio=32 -XX:+PerfDisableSharedMem -XX:MaxTenuringThreshold=1 -Dusing.aikars.flags=https://mcflags.emc.gs -Daikars.new.flags=true")
     );
     settings.write();
-    logger::success("Configuraciones guardadas!")
+    logger::success("Configuraciones guardadas!");
 }
 
 async fn check_updates<'a>(settings: Settings<'a>) {
+    let latest_version = http::get_versions(settings.software.0).await.last().expect("").clone();
+    if latest_version != settings.mc_version {
+        let should_update = utils::user_ask("Hay una nueva version de minecraft. ¿Deseas \
+        actualizar?", vec!["y", "n"]);
 
+        /*match should_update.as_str() {
+            "y" => update(),
+            _ => logger::error("")
+        }*/
+    }
 }
 
 fn first_run() -> bool {

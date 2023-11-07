@@ -1,5 +1,8 @@
-use std::io::Cursor;
-use serde::{Deserialize};
+use serde::Deserialize;
+use tokio::fs::File;
+use tokio::io::AsyncWriteExt;
+
+use tokio_stream::StreamExt;
 
 #[derive(Deserialize, Debug)]
 struct ProjectInfo {
@@ -33,12 +36,19 @@ pub async fn get_builds(software: &str, version: &str) -> Vec<String> {
 }
 
 pub async fn download_file(software: &str, version: &str, build: &str) {
+
     let jar = format!("{software}-{version}-{build}.jar");
-    let mut file = std::fs::File::create(format!("./jars/{jar}")).expect("Failed to create the \
-    file");
-    let response = reqwest::get(format!("{}/{}/versions/{}/builds/{}/dowloads/{jar}",PAPER_API, software, version, build)).await
-        .expect("Failed to get the builds");
-    let mut content = Cursor::new(response.bytes().await.expect("Failed to read bytes from \
-    response"));
-    std::io::copy(&mut content, &mut file).expect("Failed to create the file");
+    let url = format!("{}/{}/versions/{}/builds/{}/downloads/{jar}",PAPER_API, software, version,
+                      build);
+
+    println!("{}", url);
+    let mut file = File::create(format!("./jars/{jar}")).await.expect("Failed to create the file");
+    let mut stream = reqwest::get(url).await.expect("Failed to get the builds").bytes_stream();
+
+    while let Some(chunk_result) = stream.next().await {
+        let chunk = chunk_result.expect("");
+        file.write_all(&chunk).await.expect("");
+    }
+
+    file.flush().await.expect("");
 }

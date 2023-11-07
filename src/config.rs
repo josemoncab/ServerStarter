@@ -2,16 +2,16 @@ use ini::Ini;
 
 #[derive(Debug)]
 pub struct Settings<'a> {
-    console_title: String,
-    mc_version: String,
-    software: Software<'a>,
-    min_ram: String,
-    max_ram: String,
-    jar: String,
-    auto_restart: bool,
-    restart_timeout: i32,
-    java: String,
-    java_arguments: String
+    pub console_title: String,
+    pub mc_version: String,
+    pub software: Software<'a>,
+    pub min_ram: String,
+    pub max_ram: String,
+    pub jar: String,
+    pub auto_restart: bool,
+    pub restart_timeout: i32,
+    pub java: String,
+    pub java_arguments: String
 }
 
 impl Settings<'_> {
@@ -37,11 +37,7 @@ impl Settings<'_> {
 
         let section = configs.general_section();
 
-
-        let should_restart = match section.get("auto_restart").expect("Failed to get auto_restart field") {
-            "true" => true,
-            _ => false
-        };
+        let should_restart = matches!(section.get("auto_restart").expect("Failed to get auto_restart field"), "true");
 
         Settings {
             console_title: section.get("console_title").expect("Failed to get console_title field").to_string(),
@@ -76,7 +72,7 @@ impl Settings<'_> {
 }
 
 #[derive(Debug)]
-pub struct Software<'a>(&'a str);
+pub struct Software<'a>(pub(crate) &'a str);
 
 impl<'a> Software<'a> {
     pub const PAPER: Software<'a> = Software("paper");
