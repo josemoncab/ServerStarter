@@ -1,5 +1,10 @@
+use std::env::args;
+use std::io::{BufRead, BufReader};
 use std::path::Path;
+use std::process::{Command, Stdio};
+
 use crate::config::Settings;
+use crate::utils::user_ask;
 
 mod logger;
 mod http;
@@ -29,12 +34,12 @@ async fn main() {
         descarga...");
         create_server().await;
     } else {
-        logger::success("Jar encontrado!")
+        logger::success("Jar encontrado!");
+        let settings = Settings::load();
+        check_updates(settings).await;
     }
 
-    let settings = Settings::load();
-
-    check_updates(settings).await;
+    start_server().await;
 }
 
 async fn create_server() {
@@ -94,8 +99,12 @@ async fn create_server() {
         10,
         utils::user_input("Introduce el ejecutable de java (o vacio para usar el java por \
         defecto del sistema)"),
-        String::from("-XX:+UseG1GC -XX:+ParallelRefProcEnabled -XX:MaxGCPauseMillis=200
--XX:+UnlockExperimentalVMOptions -XX:+DisableExplicitGC -XX:+AlwaysPreTouch -XX:G1NewSizePercent=30 -XX:G1MaxNewSizePercent=40 -XX:G1HeapRegionSize=8M -XX:G1ReservePercent=20 -XX:G1HeapWastePercent=5 -XX:G1MixedGCCountTarget=4 -XX:InitiatingHeapOccupancyPercent=15 -XX:G1MixedGCLiveThresholdPercent=90 -XX:G1RSetUpdatingPauseTimePercent=5 -XX:SurvivorRatio=32 -XX:+PerfDisableSharedMem -XX:MaxTenuringThreshold=1 -Dusing.aikars.flags=https://mcflags.emc.gs -Daikars.new.flags=true")
+        String::from("-XX:+UseG1GC -XX:+ParallelRefProcEnabled -XX:MaxGCPauseMillis=200 \
+        -XX:+UnlockExperimentalVMOptions -XX:+DisableExplicitGC -XX:+AlwaysPreTouch \
+        -XX:G1NewSizePercent=30 -XX:G1MaxNewSizePercent=40 -XX:G1HeapRegionSize=8M \
+        -XX:G1ReservePercent=20 -XX:G1HeapWastePercent=5 -XX:G1MixedGCCountTarget=4 \
+        -XX:InitiatingHeapOccupancyPercent=15 -XX:G1MixedGCLiveThresholdPercent=90 \
+        -XX:G1RSetUpdatingPauseTimePercent=5 -XX:SurvivorRatio=32 -XX:+PerfDisableSharedMem -XX:MaxTenuringThreshold=1 -Dusing.aikars.flags=https://mcflags.emc.gs -Daikars.new.flags=true")
     );
     settings.write();
     logger::success("Configuraciones guardadas!");
@@ -112,6 +121,40 @@ async fn check_updates<'a>(settings: Settings<'a>) {
             _ => logger::error("")
         }*/
     }
+}
+
+async fn start_server() {
+    check_eula().await;
+    logger::info("Iniciando el servidor de minecraft...");
+    let settings = Settings::load();
+
+    let aikar_flags = settings.java_arguments.split_whitespace().collect::<Vec<&str>>();
+    let mut command = Command::new(format!(r#"{}\bin\java.exe"#, settings.java))
+        .arg(format!("-Xms{}", settings.min_ram))
+        .arg(format!("-Xmx{}", settings.max_ram))
+        .args(aikar_flags)
+        .arg("-jar")
+        .arg(format!(r#".\jars\{}"#, settings.jar))
+        .arg("--nogui")
+        .stdout(Stdio::inherit())
+        .spawn().expect("TODO: panic message");
+    
+    command.wait().expect("TODO: panic message");
+}
+
+// TODO: Handle case when eula.txt is found but false
+async fn check_eula() {
+    let path = Path::new("eula.txt");
+    if path.exists() {
+        logger::success("Archivo eula encontrado!");
+        return;
+    }
+    logger::warn("Archivo eula no encontrado! Generando uno nuevo...");
+    if user_ask("¿Deseas aceptar el eula?", vec!["y", "n"]) == "y" {
+        logger::success("Archivo eula aceptado!");
+        return;
+    }
+    logger::error("No has aceptado el eula de minecraft. No podras abrir el servidor hasta que lo aceptes");
 }
 
 fn first_run() -> bool {

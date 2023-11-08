@@ -47,7 +47,7 @@ pub fn user_ask(msg: &str, options: Vec<&str>) -> String {
     if !options.is_empty() {
         while !options.iter().any(|e| user_in.contains(e)) {
             logger::error("Opcion invalida");
-            logger::user(msg);
+            logger::user(format!("{msg} ({}):", options.join(", ")).as_str());
             user_in.clear();
             std::io::stdin().read_line(&mut user_in).unwrap();
         }

@@ -6,9 +6,8 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-rust-ini = "0.19.0"
+rust-ini = "0.20.0"
 reqwest = { version = "0.11.22", features = ["json", "stream"] }
 tokio = { version = "1.33.0", features = ["full"] }
 serde = { version = "1.0.188", features = ["derive"] }
-futures-macro = "0.3.28"
 tokio-stream = "0.1.14"

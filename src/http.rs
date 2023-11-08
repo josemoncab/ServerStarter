@@ -41,7 +41,6 @@ pub async fn download_file(software: &str, version: &str, build: &str) {
     let url = format!("{}/{}/versions/{}/builds/{}/downloads/{jar}",PAPER_API, software, version,
                       build);
 
-    println!("{}", url);
     let mut file = File::create(format!("./jars/{jar}")).await.expect("Failed to create the file");
     let mut stream = reqwest::get(url).await.expect("Failed to get the builds").bytes_stream();
 

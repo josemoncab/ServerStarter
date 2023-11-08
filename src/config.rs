@@ -1,5 +1,6 @@
 use ini::Ini;
 
+// TODO: Validar ram con regex y logica de cantidades
 #[derive(Debug)]
 pub struct Settings<'a> {
     pub console_title: String,
@@ -17,7 +18,10 @@ pub struct Settings<'a> {
 impl Settings<'_> {
     pub fn new(console_title: String, mc_version: String, software: String,
                min_ram: String, max_ram: String, jar: String, auto_restart: bool,
-               restart_timeout: i32, java: String, java_arguments: String) -> Self {
+               restart_timeout: i32, mut java: String, java_arguments: String) -> Self {
+        if java.is_empty() {
+            java = env!("JAVA_HOME").to_string();
+        }
         Self {
             console_title,
             mc_version,
@@ -45,7 +49,7 @@ impl Settings<'_> {
             software: Software::parse(section.get("software").expect("Failed to get software \
             field")),
             min_ram: section.get("min_ram").expect("Failed to get min_ram field").to_string(),
-            max_ram: section.get("mc_version").expect("Failed to get max_ram field").to_string(),
+            max_ram: section.get("max_ram").expect("Failed to get max_ram field").to_string(),
             jar: section.get("jar").expect("Failed to get jar field").to_string(),
             auto_restart: should_restart,
             restart_timeout: section.get("restart_timeout").expect("Failed to get restart_timeout field")
