@@ -1,5 +1,5 @@
-use std::env::args;
-use std::io::{BufRead, BufReader};
+use std::fs::File;
+use std::io::{BufRead, BufWriter, Write};
 use std::path::Path;
 use std::process::{Command, Stdio};
 
@@ -138,7 +138,7 @@ async fn start_server() {
         .arg("--nogui")
         .stdout(Stdio::inherit())
         .spawn().expect("TODO: panic message");
-    
+
     command.wait().expect("TODO: panic message");
 }
 
@@ -151,6 +151,10 @@ async fn check_eula() {
     }
     logger::warn("Archivo eula no encontrado! Generando uno nuevo...");
     if user_ask("¿Deseas aceptar el eula?", vec!["y", "n"]) == "y" {
+        let file = File::create("eula.txt").expect("Error while creating eula.txt file");
+        let mut writer = BufWriter::new(file);
+        writer.write_all(b"eula=true").expect("Error while writing to eula file");
+        writer.flush().expect("Error while saving the eula file");
         logger::success("Archivo eula aceptado!");
         return;
     }
